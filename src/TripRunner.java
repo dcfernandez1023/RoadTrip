@@ -7,9 +7,8 @@ public class TripRunner {
         DestinationParser dp = new DestinationParser();
         HashMap<String, String> attractions = dp.getAttractions("attractions.csv");
         ArrayList<HashMap<String, Object>> roads = dp.getRoads("roads.csv");
-        //System.out.println("Attractions: " + attractions.toString());
-        //System.out.println("Roads: " + roads.toString());
         RoadMap rm = new RoadMap(roads);
-        rm.saveAdjacencyMatrix("test.csv");
+        int city = rm.lookUpCity("San Francisco CA");
+        rm.dijkstra(city);
     }
 }
