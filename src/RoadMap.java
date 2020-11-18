@@ -11,8 +11,9 @@ public class RoadMap {
     private HashMap<Integer, String> cityLookUpTable;
     private int numCities = 0;
 
-    public RoadMap(ArrayList<HashMap<String, Object>> roads) {
+    public RoadMap(LinkedList<HashMap<String, Object>> roads) {
         this.constructLookUpTables(roads);
+        System.out.println("~~ Order of cities visited ~~");
         this.constructGraph(roads);
     }
 
@@ -81,6 +82,7 @@ public class RoadMap {
                 minIndex = v;
             }
         }
+        System.out.println(this.cityLookUpTable.get(minIndex));
         return minIndex;
     }
 
@@ -120,7 +122,7 @@ public class RoadMap {
         this.printDijkstraSolution(cities, root);
     }
 
-    private void constructLookUpTables(ArrayList<HashMap<String, Object>> roads) {
+    private void constructLookUpTables(LinkedList<HashMap<String, Object>> roads) {
         this.graphLookUpTable = new HashMap<>();
         this.cityLookUpTable = new HashMap<>();
         for (HashMap<String, Object> road : roads) {
@@ -138,7 +140,7 @@ public class RoadMap {
         }
     }
 
-    private void constructGraph(ArrayList<HashMap<String, Object>> roads) {
+    private void constructGraph(LinkedList<HashMap<String, Object>> roads) {
         int size = roads.size();
         this.graph = new int[this.numCities][this.numCities];
         for(int i = 0; i < size; i++) {

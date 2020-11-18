@@ -1,9 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
 
 public class DestinationParser {
 
@@ -25,11 +22,11 @@ public class DestinationParser {
         return attractions;
     }
 
-    public ArrayList<HashMap<String, Object>> getRoads(String fileName) throws FileNotFoundException, Exception {
+    public LinkedList<HashMap<String, Object>> getRoads(String fileName) throws FileNotFoundException, Exception {
         File f = new File(fileName);
         ArrayList<String> test = new ArrayList<>();
         Scanner s = new Scanner(f);
-        ArrayList<HashMap<String, Object>> roads = new ArrayList<>(100);
+        LinkedList<HashMap<String, Object>> roads = new LinkedList<>();
         while(s.hasNextLine()) {
             HashMap<String, Object> route = new HashMap<>();
             String line = s.nextLine();
