@@ -1,15 +1,17 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 public class TripRunner {
 
     public static void main(String[] args) throws Exception {
-        DestinationParser dp = new DestinationParser();
-        HashMap<String, String> attractions = dp.getAttractions("attractions.csv");
-        LinkedList<HashMap<String, Object>> roads = dp.getRoads("roads.csv");
-        RoadMap rm = new RoadMap(roads);
-        int city = rm.lookUpCity("San Francisco CA");
-        rm.dijkstra(city);
+        RoadMap rm = new RoadMap("attractions.csv", "roads.csv");
+        int root = rm.lookUpCity("San Francisco CA");
+        List<String> routes = new ArrayList<>(3);
+        routes.add("Grand Canyon");
+        routes.add("USS Midway Museum");
+        routes.add("Haystack Rock");
+        System.out.println(rm.route("San Francisco CA", "Sacramento CA", routes));
     }
 }

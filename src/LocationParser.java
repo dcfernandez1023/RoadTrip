@@ -2,7 +2,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-public class DestinationParser {
+public class LocationParser {
 
     private static final String[] ROADFIELDS = {"Start", "End", "Miles", "Minutes"};
 
