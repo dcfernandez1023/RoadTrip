@@ -24,7 +24,6 @@ public class LocationParser {
 
     public LinkedList<HashMap<String, Object>> getRoads(String fileName) throws FileNotFoundException, Exception {
         File f = new File(fileName);
-        ArrayList<String> test = new ArrayList<>();
         Scanner s = new Scanner(f);
         LinkedList<HashMap<String, Object>> roads = new LinkedList<>();
         while(s.hasNextLine()) {
@@ -38,17 +37,8 @@ public class LocationParser {
             for(int i = 0; i < ROADFIELDS.length; i++) {
                 route.put(ROADFIELDS[i], arr[i]);
             }
-            String start = arr[0];
-            String end = arr[1];
-            if(!test.contains(start)) {
-                test.add(start);
-            }
-            if(!test.contains(end)) {
-                test.add(end);
-            }
             roads.add(route);
         }
-        System.out.println("Test size: " + test.size());
         return roads;
     }
 }

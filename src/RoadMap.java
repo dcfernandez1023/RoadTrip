@@ -19,10 +19,6 @@ public class RoadMap {
         this.constructGraph(roads);
     }
 
-    public int lookUpCity(String cityName) {
-        return this.graphLookUpTable.get(cityName);
-    }
-
     public List<String> route(String startCity, String endCity, List<String> attractions) {
         int size = attractions.size() + 2;
         List<String> visiting = new ArrayList<>(size);
@@ -42,16 +38,16 @@ public class RoadMap {
             int nextCity = m.entrySet().iterator().next().getKey();
             int[][] results = m.entrySet().iterator().next().getValue();
             if(nextCity != -1) {
-                List<String> r = this.citiesInRoute(results, root, nextCity);
-                System.out.println("Route from " + this.cityLookUpTable.get(root) + " to " + this.cityLookUpTable.get(nextCity) + ": " + r);
+                List<String> inRoute = this.citiesInRoute(results, root, nextCity);
+                //System.out.println("Route from " + this.cityLookUpTable.get(root) + " to " + this.cityLookUpTable.get(nextCity) + ": " + inRoute);
                 if(i == 0) {
-                    for (int j = r.size() - 1; j >= 0; j--) {
-                        route.add(r.get(j));
+                    for (int j = inRoute.size() - 1; j >= 0; j--) {
+                        route.add(inRoute.get(j));
                     }
                 }
                 else {
-                    for (int j = r.size() - 2; j >=0; j--) {
-                        route.add(r.get(j));
+                    for (int j = inRoute.size() - 2; j >=0; j--) {
+                        route.add(inRoute.get(j));
                     }
                 }
                 root = nextCity;
@@ -62,63 +58,12 @@ public class RoadMap {
         Map<Integer, int[][]> m = this.dijkstra(root, visiting, visited);
         int nextCity = m.entrySet().iterator().next().getKey();
         int[][] results = m.entrySet().iterator().next().getValue();
-        List<String> r = this.citiesInRoute(results, root, nextCity);
-        System.out.println("Route from " + this.cityLookUpTable.get(root) + " to " + this.cityLookUpTable.get(nextCity) + ": " + r);
-        for(int j = r.size()-2; j >= 0; j--) {
-            route.add(r.get(j));
+        List<String> inRoute = this.citiesInRoute(results, root, nextCity);
+        //System.out.println("Route from " + this.cityLookUpTable.get(root) + " to " + this.cityLookUpTable.get(nextCity) + ": " + inRoute);
+        for(int j = inRoute.size()-2; j >= 0; j--) {
+            route.add(inRoute.get(j));
         }
         return route;
-    }
-
-    private List<String> citiesInRoute(int[][] results, int root, int endVertex) {
-        List<String> routeOrder = new LinkedList<>();
-        routeOrder.add(this.cityLookUpTable.get(endVertex));
-        int currentVertex = endVertex;
-        for(int i = 0; i < this.numCities; i++) {
-            if(currentVertex == root) {
-                return routeOrder;
-            }
-            currentVertex = results[currentVertex][2];
-            routeOrder.add(this.cityLookUpTable.get(currentVertex));
-        }
-        return routeOrder;
-    }
-
-    public HashMap<Integer, int[][]> dijkstra(int root, List<String> visiting, List<String> visited) {
-        int[][] results = new int[this.numCities][4];
-        for(int i = 0; i < results.length; i++) {
-            int[] arr = results[i];
-            arr[0] = i;
-            arr[1] = 0;
-            arr[2] = -1;
-            arr[3] = -1;
-        }
-        HashMap<Integer, int[][]> nextCityAndRoute = new HashMap<>();
-        int[] cities = new int[this.numCities];
-        boolean[] known = new boolean[this.numCities];
-        for(int i = 0; i < this.numCities; i++) {
-            cities[i] = Integer.MAX_VALUE;
-            known[i] = false;
-        }
-        cities[root] = 0;
-        for(int count = 0; count < this.numCities - 1; count++) {
-            int chosenVertex = findNextVertex(cities, known);
-            if(chosenVertex != Integer.MAX_VALUE && chosenVertex != root && visiting.contains(this.cityLookUpTable.get(chosenVertex)) && !visited.contains(this.cityLookUpTable.get(chosenVertex))) {
-                nextCityAndRoute.put(chosenVertex, results);
-                return nextCityAndRoute;
-            }
-            known[chosenVertex] = true;
-            results[chosenVertex][1] = 1;
-            for(int v = 0; v < this.numCities; v++) {
-                if(!known[v] && this.graph[chosenVertex][v] != 0 && cities[chosenVertex] != Integer.MAX_VALUE && cities[chosenVertex] + graph[chosenVertex][v] < cities[v]) {
-                    cities[v] = cities[chosenVertex] + this.graph[chosenVertex][v];
-                    results[v][2] = chosenVertex;
-                    results[v][3] = cities[v];
-                }
-            }
-        }
-        //printDijkstraSolution(cities, root);
-        return null;
     }
 
     //saves pure adjacency graph in CSV format (without city headers)
@@ -170,6 +115,57 @@ public class RoadMap {
             fWriter.write(line);
         }
         fWriter.close();
+    }
+
+    private List<String> citiesInRoute(int[][] results, int root, int endVertex) {
+        List<String> routeOrder = new LinkedList<>();
+        routeOrder.add(this.cityLookUpTable.get(endVertex));
+        int currentVertex = endVertex;
+        for(int i = 0; i < this.numCities; i++) {
+            if(currentVertex == root) {
+                return routeOrder;
+            }
+            currentVertex = results[currentVertex][2];
+            routeOrder.add(this.cityLookUpTable.get(currentVertex));
+        }
+        return routeOrder;
+    }
+
+    private HashMap<Integer, int[][]> dijkstra(int root, List<String> visiting, List<String> visited) {
+        int[][] results = new int[this.numCities][4];
+        for(int i = 0; i < results.length; i++) {
+            int[] arr = results[i];
+            arr[0] = i;
+            arr[1] = 0;
+            arr[2] = -1;
+            arr[3] = -1;
+        }
+        HashMap<Integer, int[][]> nextCityAndRoute = new HashMap<>();
+        int[] cities = new int[this.numCities];
+        boolean[] known = new boolean[this.numCities];
+        for(int i = 0; i < this.numCities; i++) {
+            cities[i] = Integer.MAX_VALUE;
+            known[i] = false;
+        }
+        cities[root] = 0;
+        for(int count = 0; count < this.numCities - 1; count++) {
+            int chosenVertex = findNextVertex(cities, known);
+            if(chosenVertex != Integer.MAX_VALUE && chosenVertex != root && visiting.contains(this.cityLookUpTable.get(chosenVertex)) && !visited.contains(this.cityLookUpTable.get(chosenVertex))) {
+                nextCityAndRoute.put(chosenVertex, results);
+                return nextCityAndRoute;
+            }
+            known[chosenVertex] = true;
+            results[chosenVertex][1] = 1;
+            for(int v = 0; v < this.numCities; v++) {
+                if(!known[v] && this.graph[chosenVertex][v] != 0 && cities[chosenVertex] != Integer.MAX_VALUE && cities[chosenVertex] + graph[chosenVertex][v] < cities[v]) {
+                    cities[v] = cities[chosenVertex] + this.graph[chosenVertex][v];
+                    results[v][2] = chosenVertex;
+                    results[v][3] = cities[v];
+                }
+            }
+        }
+        //printDijkstraSolution(cities, root);
+        return null;
     }
 
     private int findNextVertex(int[] cities, boolean[] known) {
