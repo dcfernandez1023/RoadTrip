@@ -20,112 +20,78 @@ public class RoadMap {
     }
 
     public List<String> route(String startCity, String endCity, List<String> attractions) {
+        //INITIALIZE VARIABLES
         int size = attractions.size() + 2;
-        List<String> visiting = new ArrayList<>(size);
-        List<String> visited = new ArrayList<>(size);
+        List<String> visiting = new ArrayList<>(size); //array of cities to visit
+        List<String> visited = new ArrayList<>(size); //array of cities that have been visited
         visiting.add(startCity);
         visited.add(startCity);
         for (String attraction : attractions) {
             visiting.add(this.attractions.get(attraction));
         }
-        List<String> route = new ArrayList<>(size);
+        List<String> route = new ArrayList<>(size); //variable to store the fastest route
         int root = this.graphLookUpTable.get(startCity);
-        for(int i = 0; i < size - 1; i++) {
+        //STEP 1: FIND FASTEST ROUTE BETWEEN START CITY AND ALL ATTRACTIONS
+        for(int i = 0; i < size - 2; i++) {
             Map<Integer, int[][]> m = this.dijkstra(root, visiting, visited);
+            //if m is null, then no path has been found
             if(m == null) {
+                System.out.println("Could not find a route from " + startCity + " to " + endCity);
                 break;
             }
             int nextCity = m.entrySet().iterator().next().getKey();
-            int[][] results = m.entrySet().iterator().next().getValue();
+            int[][] results = m.get(nextCity);
             if(nextCity != -1) {
                 List<String> inRoute = this.citiesInRoute(results, root, nextCity);
                 //System.out.println("Route from " + this.cityLookUpTable.get(root) + " to " + this.cityLookUpTable.get(nextCity) + ": " + inRoute);
-                if(i == 0) {
-                    for (int j = inRoute.size() - 1; j >= 0; j--) {
-                        route.add(inRoute.get(j));
-                    }
-                }
-                else {
-                    for (int j = inRoute.size() - 2; j >=0; j--) {
-                        route.add(inRoute.get(j));
-                    }
+                for (int j = inRoute.size() - 1; j >=0; j--) {
+                    route.add(inRoute.get(j));
                 }
                 root = nextCity;
                 visited.add(this.cityLookUpTable.get(nextCity));
             }
         }
+        //STEP 2: FIND FASTEST ROUTE BETWEEN LAST ATTRACTION AND END CITY
         visiting.add(endCity);
         Map<Integer, int[][]> m = this.dijkstra(root, visiting, visited);
+        //if m is null, then no path was found
+        if(m == null) {
+            System.out.println("Could not find a route from " + startCity + " to " + endCity);
+            return null;
+        }
         int nextCity = m.entrySet().iterator().next().getKey();
-        int[][] results = m.entrySet().iterator().next().getValue();
+        int[][] results = m.get(nextCity);
         List<String> inRoute = this.citiesInRoute(results, root, nextCity);
         //System.out.println("Route from " + this.cityLookUpTable.get(root) + " to " + this.cityLookUpTable.get(nextCity) + ": " + inRoute);
-        for(int j = inRoute.size()-2; j >= 0; j--) {
+        for(int j = inRoute.size()-1; j >= 0; j--) {
             route.add(inRoute.get(j));
         }
+        route.add(endCity);
         return route;
     }
 
-    //saves pure adjacency graph in CSV format (without city headers)
-    public void savePureGraph(String fileName) throws IOException {
-        File f = new File(fileName);
-        FileWriter fWriter = new FileWriter(fileName);
-        for (int[] ints : this.graph) {
-            String line = "";
-            int[] arr = ints;
-            for (int j = 0; j < arr.length; j++)
-            {
-                if (j == arr.length - 1)
-                {
-                    line = line + arr[j] + "\n";
-                } else
-                {
-                    line = line + arr[j] + ",";
-                }
-            }
-            fWriter.write(line);
+    public int getDistanceTraveled(List<String> route) {
+        int distance = 0;
+        for(int i = 0; i < route.size()-1; i++) {
+            int city = this.graphLookUpTable.get(route.get(i));
+            int nextCity = this.graphLookUpTable.get(route.get(i+1));
+            distance = distance + this.graph[city][nextCity];
         }
-        fWriter.close();
-    }
-
-    //saves adjacency graph to a file in CSV format with city headers
-    public void saveGraph(String fileName) throws IOException {
-        File f = new File(fileName);
-        FileWriter fWriter = new FileWriter(fileName);
-        String colHeaders = " ,";
-        for(int i = 0 ; i < this.graph.length; i++) {
-            if(i == this.graph.length - 1) {
-                colHeaders = colHeaders + "\n";
-            }
-            else {
-                colHeaders = colHeaders + this.cityLookUpTable.get(i) + ",";
-            }
-        }
-        fWriter.write(colHeaders);
-        for(int i = 0; i < this.graph.length; i++) {
-            String line = "" + this.cityLookUpTable.get(i) + ",";
-            int[] arr = this.graph[i];
-            for (int j = 0; j < arr.length; j++) {
-                if (j == arr.length - 1) {
-                    line = line + arr[j] + "\n";
-                } else {
-                    line = line + arr[j] + ",";
-                }
-            }
-            fWriter.write(line);
-        }
-        fWriter.close();
+        return distance;
     }
 
     private List<String> citiesInRoute(int[][] results, int root, int endVertex) {
         List<String> routeOrder = new LinkedList<>();
-        routeOrder.add(this.cityLookUpTable.get(endVertex));
+        if(root == endVertex) {
+            return routeOrder;
+        }
         int currentVertex = endVertex;
         for(int i = 0; i < this.numCities; i++) {
+            currentVertex = results[currentVertex][2];
             if(currentVertex == root) {
+                routeOrder.add(this.cityLookUpTable.get(currentVertex));
                 return routeOrder;
             }
-            currentVertex = results[currentVertex][2];
             routeOrder.add(this.cityLookUpTable.get(currentVertex));
         }
         return routeOrder;
@@ -224,5 +190,56 @@ public class RoadMap {
             this.graph[start][end] = Integer.parseInt((String) route.get("Miles"));
             this.graph[end][start] = Integer.parseInt((String) route.get("Miles"));
         }
+    }
+
+    //saves pure adjacency graph in CSV format (without city headers)
+    public void savePureGraph(String fileName) throws IOException {
+        File f = new File(fileName);
+        FileWriter fWriter = new FileWriter(fileName);
+        for (int[] ints : this.graph) {
+            String line = "";
+            int[] arr = ints;
+            for (int j = 0; j < arr.length; j++)
+            {
+                if (j == arr.length - 1)
+                {
+                    line = line + arr[j] + "\n";
+                } else
+                {
+                    line = line + arr[j] + ",";
+                }
+            }
+            fWriter.write(line);
+        }
+        fWriter.close();
+    }
+
+    //saves adjacency graph to a file in CSV format with city headers
+    public void saveGraph(String fileName) throws IOException {
+        File f = new File(fileName);
+        FileWriter fWriter = new FileWriter(fileName);
+        String colHeaders = " ,";
+        for(int i = 0 ; i < this.graph.length; i++) {
+            if(i == this.graph.length - 1) {
+                colHeaders = colHeaders + "\n";
+            }
+            else {
+                colHeaders = colHeaders + this.cityLookUpTable.get(i) + ",";
+            }
+        }
+        fWriter.write(colHeaders);
+        for(int i = 0; i < this.graph.length; i++) {
+            String line = "" + this.cityLookUpTable.get(i) + ",";
+            int[] arr = this.graph[i];
+            for (int j = 0; j < arr.length; j++) {
+                if (j == arr.length - 1) {
+                    line = line + arr[j] + "\n";
+                } else {
+                    line = line + arr[j] + ",";
+                }
+            }
+            fWriter.write(line);
+        }
+        fWriter.close();
     }
 }
