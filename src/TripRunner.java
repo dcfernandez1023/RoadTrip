@@ -3,6 +3,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+/*
+    Driver code for the project.
+*/
 public class TripRunner {
 
     public static void main(String[] args) throws Exception {
@@ -12,7 +15,7 @@ public class TripRunner {
         routes.add("The Field of Dreams Filming Locale");
         routes.add("Hilton Head");
         List<String> route = rm.route("San Francisco CA", "Abilene TX", routes);
-        System.out.println(route);
-        System.out.println(rm.getDistanceTraveled(route));
+        System.out.println("Route: " + route);
+        System.out.println("Distance: " + rm.getDistanceTraveled(route) + " miles");
     }
 }
