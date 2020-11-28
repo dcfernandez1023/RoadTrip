@@ -35,12 +35,20 @@ public class RoadMap {
         if(!this.isValidInputs(startCity, endCity, attractions)) {
             return null;
         }
+        //IF START CITY AND END CITY ARE THE SAME AND THERE ARE NO ATTRACTIONS, RETURN ROUTE WITH ONLY THE START CITY/END CITY
+        if(startCity.equals(endCity) && attractions.size() == 0) {
+            List<String> route = new ArrayList<>(1);
+            route.add(startCity);
+            return route;
+        }
         //INITIALIZE VARIABLES
         int size = attractions.size() + 2;
         List<String> visiting = new ArrayList<>(size); //array of cities to visit
         List<String> visited = new ArrayList<>(size); //array of cities that have been visited
         visiting.add(startCity);
-        visited.add(startCity);
+        if(!startCity.equals(endCity)) {
+            visited.add(startCity);
+        }
         //add attractions to visiting list
         for (String attraction : attractions) {
             this.graphLookUpTable.get(attraction);
@@ -101,7 +109,7 @@ public class RoadMap {
             }
             return distance;
         }
-        //input validation -- if any of the cities in the list are invalid (don't match the cities in roads.csv/attractions.csv), then terminate
+        //input validation -- if any of the cities in the list are invalid (don't match the cities in the lookup tables), then terminate
         catch(Exception e) {
             System.out.println("Route contains invalid cities. Could not calculate distance");
         }
