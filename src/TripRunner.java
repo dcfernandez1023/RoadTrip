@@ -33,7 +33,7 @@ public class TripRunner {
         //routes.add("Hilton Head");
         System.out.println("---- Results ----");
         List<String> route = rm.route(startCity, endCity, attractions);
-        System.out.println("Route: " + route);
+        System.out.println ("Route: " + route);
         System.out.println("Distance: " + rm.getDistanceTraveled(route) + " miles");
     }
 }

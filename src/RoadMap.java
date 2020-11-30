@@ -31,68 +31,131 @@ public class RoadMap {
     //calls a number of private helper functions defined within this class
     //if the names of the cities or attractions do not match the names from roads.csv or attractions.csv, this method terminates
     public List<String> route(String startCity, String endCity, List<String> attractions) {
-        //validate inputs
+        //if inputs are invalid, terminate
         if(!this.isValidInputs(startCity, endCity, attractions)) {
-            return null;
+            return new ArrayList<>();
         }
-        //IF START CITY AND END CITY ARE THE SAME AND THERE ARE NO ATTRACTIONS, RETURN ROUTE WITH ONLY THE START CITY/END CITY
+        //initialize variables
+        List<String> route = new ArrayList<>(attractions.size()+2);
+        List<String> visiting;
+        List<String> visited;
+        Map<Integer, int[][]> m;
+        int[][] results;
+        int nextCity;
+        Stack<String> inRoute;
+        //start city equals end city and there are no attractions, so just return the city
         if(startCity.equals(endCity) && attractions.size() == 0) {
-            List<String> route = new ArrayList<>(1);
             route.add(startCity);
             return route;
         }
-        //INITIALIZE VARIABLES
-        int size = attractions.size() + 2;
-        List<String> visiting = new ArrayList<>(size); //array of cities to visit
-        List<String> visited = new ArrayList<>(size); //array of cities that have been visited
-        visiting.add(startCity);
-        if(!startCity.equals(endCity)) {
-            visited.add(startCity);
-        }
-        //add attractions to visiting list
-        for (String attraction : attractions) {
-            this.graphLookUpTable.get(attraction);
-            visiting.add(this.attractions.get(attraction));
-        }
-        List<String> route = new ArrayList<>(size); //variable to store the fastest route
-        int root = this.graphLookUpTable.get(startCity);
-        //STEP 1: FIND FASTEST ROUTE BETWEEN START CITY AND ALL ATTRACTIONS
-        for(int i = 0; i < size - 2; i++) {
-            Map<Integer, int[][]> m = this.dijkstra(root, visiting, visited);
-            //if m is null, then no path has been found
+        //if there are no attractions, just find shortest route between start and end city
+        if(attractions.size() == 0) {
+            visiting = new ArrayList<>(1);
+            visited = new ArrayList<>(1);
+            visiting.add(endCity); //add end city to visiting
+            int root = this.graphLookUpTable.get(startCity); //initialize root to start city (since we are finding route just from start to end city)
+            m = this.dijkstra(root, visiting, visited); //use modified version of dijkstra to find closest city to the root from the visiting list and the dijksra result table to calculate the route
+            //if m is null, then the dijkstra() function could not find a route to the closest city within the visiting list, so terminate
             if(m == null) {
                 System.out.println("Could not find a route from " + startCity + " to " + endCity);
-                return null;
+                return new ArrayList<>();
             }
-            int nextCity = m.entrySet().iterator().next().getKey(); //get index of next city
-            int[][] results = m.get(nextCity); //get result table from dijkstra's algorithm
-            if(nextCity != -1) {
-                Stack<String> inRoute = this.citiesInRoute(results, root, nextCity); //find cities visited from the root vertex to the vertex of nextCity
-                //System.out.println("Route from " + this.cityLookUpTable.get(root) + " to " + this.cityLookUpTable.get(nextCity) + ": " + inRoute);
-                //add cities that were visited from dijkstra's algorithm to the route (dijkstra's algorithm ensures that these cities are the shortest path)
-                while(!inRoute.empty()){
-                    route.add(inRoute.pop());
-                }
-                root = nextCity; //set root to nextCity (by setting the root, this ensures that dijkstra's algorithm will be performed on the next city/attraction)
-                visited.add(this.cityLookUpTable.get(nextCity)); //add nextCity to the visited list to ensure that dijkstra's algorithm does not attempt to find a path to the root vertex
+            nextCity = m.entrySet().iterator().next().getKey(); //get index of next city
+            results = m.get(nextCity); //get result table from dijkstra's algorithm; used to backtrack and determine the route
+            inRoute = this.citiesInRoute(results, root, nextCity); //a stack data structure to make it easy and efficient to add to the shortest route list
+            while(!inRoute.empty()){
+                route.add(inRoute.pop());
+            }
+            route.add(endCity);
+            return route;
+        }
+        //instantiate variables
+        visiting = new ArrayList<>(attractions.size());
+        visited = new ArrayList<>(attractions.size());
+        //loop through attractions parameter and add cities that the attractions are in to the visiting list
+        for(String attraction: attractions) {
+            String city = this.attractions.get(attraction);
+            /*
+                if visiting list does not contain the city, the city is not the start city, and the city is not
+                the end city, then add the attraction's city to visiting list; this if block is necessary to avoid
+                duplicate cities in the visiting list and also to avoid visiting the start city or end city more
+                than once when finding shortest route between the attractions, as that would be inefficient
+            */
+            if(!visiting.contains(city) && !city.equals(startCity) && !city.equals(endCity)) {
+                visiting.add(this.attractions.get(attraction));
             }
         }
-        //STEP 2: FIND FASTEST ROUTE BETWEEN LAST ATTRACTION AND END CITY
-        visiting.add(endCity); //add endCity to the visiting list so dijkstra's algorithm will visit it and return once it gets visited
-        Map<Integer, int[][]> m = this.dijkstra(root, visiting, visited);
-        //if m is null, then no path was found
+        //special case if visiting list has no elements
+        if(visiting.size() == 0) {
+            //if start city equals end city, then there's no route, so just return that city
+            if(startCity.equals(endCity)) {
+                route.add(startCity);
+                return route;
+            }
+            //else if start city does not equal end city, then just find the route between start and end city using the same algorithm as earlier on in this method
+            visiting = new ArrayList<>(1);
+            visited = new ArrayList<>(1);
+            visiting.add(endCity);
+            int root = this.graphLookUpTable.get(startCity);
+            m = this.dijkstra(root, visiting, visited);
+            if(m == null) {
+                System.out.println("Could not find a route from " + startCity + " to " + endCity);
+                return new ArrayList<>();
+            }
+            nextCity = m.entrySet().iterator().next().getKey(); //get index of next city
+            results = m.get(nextCity); //get result table from dijkstra's algorithm
+            inRoute = this.citiesInRoute(results, root, nextCity);
+            while(!inRoute.empty()){
+                route.add(inRoute.pop());
+            }
+            route.add(endCity);
+            return route;
+        }
+        //find attraction closest to start city
+        int root = this.graphLookUpTable.get(startCity);
+        m = this.dijkstra(root, visiting, visited);
         if(m == null) {
             System.out.println("Could not find a route from " + startCity + " to " + endCity);
-            return null;
+            return new ArrayList<>();
         }
-        int nextCity = m.entrySet().iterator().next().getKey();
-        int[][] results = m.get(nextCity);
-        Stack<String> inRoute = this.citiesInRoute(results, root, nextCity);
-        //System.out.println("Route from " + this.cityLookUpTable.get(root) + " to " + this.cityLookUpTable.get(nextCity) + ": " + inRoute);
+        nextCity = m.entrySet().iterator().next().getKey(); //get index of next city
+        results = m.get(nextCity); //get result table from dijkstra's algorithm
+        inRoute = this.citiesInRoute(results, root, nextCity);
         while(!inRoute.empty()){
             route.add(inRoute.pop());
         }
-        route.add(endCity); //finally, add endCity before returning the route
+        //find shortest route from attraction closest to start city to all other attractions
+        root = nextCity;
+        for(int i = 0; i < visiting.size()-1; i++) {
+            m = this.dijkstra(root, visiting, visited);
+            if(m == null) {
+                System.out.println("Could not find a route from " + startCity + " to " + endCity);
+                return new ArrayList<>();
+            }
+            nextCity = m.entrySet().iterator().next().getKey(); //get index of next city
+            results = m.get(nextCity); //get result table from dijkstra's algorithm
+            inRoute = this.citiesInRoute(results, root, nextCity);
+            while(!inRoute.empty()){
+                route.add(inRoute.pop());
+            }
+            visited.add(this.cityLookUpTable.get(root));
+            root = nextCity; //set root to the closest city chosen from the previous root
+        }
+        //lastly, find shortest route from last attraction to end city
+        visiting.add(endCity);
+        m = this.dijkstra(root, visiting, visited);
+        if(m == null) {
+            System.out.println("Could not find a route from " + startCity + " to " + endCity);
+            return new ArrayList<>();
+        }
+        nextCity = m.entrySet().iterator().next().getKey(); //get index of next city
+        results = m.get(nextCity); //get result table from dijkstra's algorithm
+        inRoute = this.citiesInRoute(results, root, nextCity);
+        while(!inRoute.empty()){
+            route.add(inRoute.pop());
+        }
+        //finally, add the end city to the route
+        route.add(endCity);
         return route;
     }
 
